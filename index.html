@@ -1,0 +1,334 @@
+<!doctype html>
+<html class="no-js" lang="">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="x-ua-compatible" content="ie=edge">
+        <title></title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <link rel="apple-touch-icon" href="apple-touch-icon.png">
+        <!-- Place favicon.ico in the root directory -->
+
+        <link rel="stylesheet" href="css/normalize.css">
+        <link rel="stylesheet" href="css/main.css">
+
+    </head>
+    <body>
+        <!--[if lt IE 8]>
+            <p class="browserupgrade">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
+        <![endif]-->
+        <h1>Informatie Visualisatie - Lengte en Schoenmaat</h1>
+
+
+        <script type="text/javascript">
+              var derp;
+                    var maxS = - 1, minS = 100;
+                    var maxL = - 1, minL = 500;
+                    var sortL = false;
+                    var sortS = false;
+
+                    function unsort(){
+                        sortL = false;
+                        sortS = false;
+                        d3.select("#canvass").select("svg").remove();
+                        render();
+                    }
+
+                    function sort2(){
+                        sortS = false;
+                        sortL = true;
+                        d3.select("#canvass").select("svg").remove();
+                        render();
+                    }
+
+                    function sort3(){
+                        sortS = true;
+                        sortL = false;
+                        d3.select("#canvass").select("svg").remove();
+                        render();
+
+                    }
+        </script>
+
+        <h2>Cirkel voorstelling</h2>
+        <p>Legende: </p><ul>
+            <li><span id="rood">Rood: </span>Hoge schoenmaat</li>
+            <li><span id="groen">Groen: </span>Kleine schoenmaat</li>
+            <li>Cirkel oppervlakte: totale grootte van de teams</li>
+        </ul>
+        <div id="canvasCirkel"></div>
+        <div id="pop"><p id="infoC"></p></div>
+        <p><input type="button" value="Deselecteer" onclick="unselect();"></p>
+        <h2>Staafdiagrammen</h2>
+            <p><input type="button" value="Desorteer" onclick="unsort();">
+            <input type="button" value="Sorteer schoenmaat" onclick="sort3();"> <input type="button" value="Sorteer lengte" onclick="sort2();"></p>
+
+        <div id="canvass"></div>
+
+
+
+
+        <script src="js/plugins.js"></script>
+        <script src="js/d3.js"></script>
+        <script src="js/main.js"></script>
+        <script src="js/jquery.js"></script>
+        <script type="text/javascript">
+
+                    var selectTeam = "";
+                    function unselect(){
+                        selectTeam = "";
+                        d3.select("#canvass").select("svg").remove();
+                        render();
+                    }
+
+                    var currentMousePos = { x: -1, y: -1 };
+                    function render(){
+                    d3.csv("data.csv", function(data){
+                        var dis = 265;
+                        derp = data;
+                            dataC = $.extend(true,[],data);
+
+                            if(sortL){
+                               data.sort(function(a,b) { return +a.lengte - +b.lengte; })
+                            }
+                            else if(sortS){
+                                data.sort(function(a,b) { return +a.schoenmaat - +b.schoenmaat; })
+                            }
+
+                            //capturing mouse position
+                       $(document).mousemove(function(event) {
+                            currentMousePos.x = event.pageX;
+                            currentMousePos.y = event.pageY;
+                        });
+
+                    for (val of data){
+                        if (val.schoenmaat > maxS){
+                        maxS = val.schoenmaat;
+                        }
+                    }
+
+                    for (val of data){
+                        if (val.schoenmaat < minS && val.schoenmaat != ""){
+                            minS = val.schoenmaat;
+                        }
+                    }
+
+                    for (val of data){
+                        if (val.lengte > maxL){
+                        maxL = val.lengte;
+                        }
+                    }
+
+                    for (val of data){
+                        if (val.lengte < minL && val.lengte != ""){
+                        minL = val.lengte;
+                        }
+                    }
+
+
+                    var canvas = d3.select("#canvass").append("svg").attr("width", 1500).attr("height", 350);
+                    var colorScale = d3.scale.linear().domain([minS, maxS]).range(["#0000FF", "#00006B"]);
+
+                    var widthScale = d3.scale.linear().domain([0, maxS]).range([0, 500]);
+
+                    var group1 = canvas.append("g").attr("transform", "translate(10,50)");
+                    var axisGroup = group1.append("g");
+                    var textShoe = canvas.append("text").text("Schoenmaat")
+                            .attr("font-family", "sans-serif")
+                            .attr("font-size", "20px")
+                            .attr("x", 50)
+                            .attr("y", 20);
+                         var textShoe = canvas.append("text").text("Lengte")
+                            .attr("font-family", "sans-serif")
+                            .attr("font-size", "20px")
+                            .attr("x", 650)
+                            .attr("y", 20);
+
+                    var bars = group1.selectAll("rect").data(data).enter()
+                            .append("rect")
+                            .filter(function(d) { if(selectTeam ==""){ return true; } else{ dis = 33; return selectTeam == d.team; } })
+                            .attr("height", function(d){return 10; })
+                            .attr("width", function(d){return widthScale(d.schoenmaat); })
+                            .attr("fill", function(d){return colorScale(d.schoenmaat); })
+                            .attr("y", function (d, i){return i * 11; })
+                            .attr("x", 0)
+                            .on("mouseover", function(d) {
+                               d3.select(this).attr("fill","red");
+                       var moveLeft = 20;
+                                var moveDown = 10;
+                        $("#pop").css('top', currentMousePos.y + moveDown).css('left',currentMousePos.x + moveLeft).show();
+
+                               $("#pop").html("Schoenmaat: "+d.schoenmaat);
+                             })
+                             .on("mouseout",  function(d) {
+                                d3.select(this).attr("fill",colorScale(d.schoenmaat) );
+                                $("#pop").hide();
+
+                                });
+
+                            var axis = d3.svg.axis().scale(widthScale).ticks(6);
+                            axisGroup.attr("transform", "translate(0,"+dis+")").attr("class", "axis").call(axis);
+
+                    var lengthScale = d3.scale.linear().domain([0, maxL]).range([0, 500]);
+                    var colorScaleLength = d3.scale.linear().domain([minL, maxL]).range(["#0000FF", "#00006B"]);
+
+                            var group2 = canvas.append("g").attr("transform", "translate(600,50)");
+                            var axisGroup2 = group2.append("g");
+
+                            var bars = group2.selectAll("rect").data(data).enter()
+                            .append("rect")
+                            .filter(function(d) {  if(selectTeam ==""){ return true; } else{ dis = 33; return selectTeam == d.team; } })
+                            .attr("height", function(d){return 10; })
+                            .attr("width", function(d){return lengthScale(d.lengte); })
+                            .attr("fill", function(d){return colorScaleLength(d.lengte); })
+                            .attr("y", function (d, i){return i * 11; })
+                            .attr("x", 0)
+                            .on("mouseover", function(d) {
+                               d3.select(this).attr("fill","red");
+                        var moveLeft = 20;
+                                var moveDown = 10;
+                                $("#pop").css('top', currentMousePos.y + moveDown).css('left',currentMousePos.x + moveLeft).show();
+
+                            $("#pop").text("Lengte:  "+d.lengte);
+                                  })
+                                  .on("mouseout",  function(d) {
+                                     d3.select(this).attr("fill",colorScaleLength(d.lengte) );
+                             $("#pop").hide();
+
+                                     });
+
+                            var axisLengte = d3.svg.axis().scale(lengthScale).ticks(10);
+                            axisGroup2.attr("transform", "translate(0,"+dis+")").attr("class", "axis").call(axisLengte);
+
+
+                    /**
+                     * Cirkel visualisatie dinges starten hier
+                     */
+
+
+                });
+            }
+            function render2(){
+ d3.csv("data.csv", function(dataC){
+      var canvasCircle = d3.select("#canvasCirkel").append("svg").attr("width", 1500).attr("height", 350);
+                    var groupC1 = canvasCircle.append("g").attr("transform", "translate(60,70)");
+                    //process groupsdata
+                    var groupsShoe = {};
+                    var groupsLength = {};
+                    var minGL = 10000;
+                    var maxGL = -1;
+                    var minSL = 1000000;
+                    var maxSL = -1;
+
+
+                    for (val of dataC){
+                        if(groupsShoe[val.team] !== undefined && val.schoenmaat != ""){
+                         groupsShoe[val.team] += parseInt(val.schoenmaat);
+                        }
+                        else if(val.schoenmaat != ""){
+                            groupsShoe[val.team] = parseInt(val.schoenmaat);
+
+                        }
+                        if(groupsLength[val.team] !== undefined && "" != val.lengte){
+                            groupsLength[val.team] += parseInt(val.lengte);
+                        }
+                        else if("" != val.lengte){
+                            groupsLength[val.team] = parseInt(val.lengte);
+                        }
+
+                    }
+
+
+
+                    groupsLengthArray = [];
+                    var groupShoeL = [];
+                    var groupLengthL = [];
+                    var teamNames = [];
+                    var prevGroup = "";
+                    var i = 0;
+
+                    for(val of dataC){
+                        if(prevGroup != val.team){
+                        groupShoeL[i] = groupsShoe[val.team];
+                        groupLengthL[i] = groupsLength[val.team];
+                        groupsLengthArray.push( groupsLength[val.team] );
+                        prevGroup = val.team;
+                        teamNames.push(val.team);
+                        i++;
+                        }
+                    }
+
+                    var circleScale = d3.scale.linear().domain([ d3.min(groupLengthL), d3.max(groupLengthL) ]).range([5, 50]);
+                    var circleColorScale = d3.scale.linear().domain([122, d3.max(groupShoeL)]).range(["#15FF00", "#FF0000"]);
+
+
+                     var circles = groupC1.selectAll("circle").data(groupsLengthArray).enter()
+                            .append("circle")
+                            .attr("cx", function(d, i){  return i % 4 * 200; })
+                            .attr("cy", function(d, i){ return Math.floor(i / 4) * 150; })
+                            .attr("r", function(d) {  return circleScale(d); })
+                           .attr("fill", function(d, i){return  circleColorScale(groupShoeL[i]); })
+                            .on("mouseover", function(d, i) {
+                                d3.select(this).attr("fill-opacity","0.7");
+                                var moveLeft = 20;
+                                var moveDown = 10;
+                                $("#pop").css('top', currentMousePos.y + moveDown).css('left',currentMousePos.x + moveLeft).show();
+                                var great = 0;
+                                var shoeg = 0;
+                                var small = 500;
+                                var shoes = 100;
+                                for (val of dataC){
+                                    if(val.team == teamNames[i]){
+                                        if(val.lengte > great){
+                                            great = val.lengte;
+                                        }
+                                        if(val.lengte < small){
+                                            small = val.lengte;
+                                        }
+                                        if(val.schoenmaat > shoeg){
+                                            shoeg= val.schoenmaat;
+                                        }
+                                        if(val.schoenmaat < shoes){
+                                            shoes = val.schoenmaat;
+                                        }
+
+                                    }
+                                }
+
+                                $("#infoC").html("<p>Team: "+teamNames[i]+"</p>\n\
+                                                  <p>Grootste persoon:"+great+" cm</p>\n\
+                                                  <p>Kleinste persoon:"+small+" cm</p>\n\
+                                                  <p>Grootste schoenmaat:"+shoeg+"</p>\n\
+                                                  <p>Kleinste schoenmaat:"+shoes+"</p>");
+    })
+                            .on("mouseout",  function(d) {
+                              d3.select(this).attr("fill-opacity","1");
+                             $("#pop").hide();
+
+                                     })
+                                      .on("click", function(d, i) { // drect refers to the data bound to the rect
+                                    selectTeam = teamNames[i];// dbar.key will be either 'likes' or 'dislikes'
+                                    d3.select("#canvass").select("svg").remove();
+                                    render();
+                              });
+
+                     var textShoe = groupC1.selectAll("text").data(teamNames).enter().append("text").text(function(d){return d;})
+                            .attr("font-family", "sans-serif")
+                            .attr("font-size", "15px")
+                            .attr("x", function(d,i){return i % 4 * 205; } )
+                            .attr("y", function(d,i){return Math.floor(i / 4) * 150;} )
+                            .attr("transform","translate(-50,70)");
+
+                   derp = teamNames;
+
+                    });
+                }
+                render();
+                render2();
+
+        </script>
+
+
+    </body>
+</html>

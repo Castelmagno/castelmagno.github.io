@@ -1,0 +1,115 @@
+<!doctype html>
+<html class="no-js" lang="">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="x-ua-compatible" content="ie=edge">
+        <title></title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <link rel="apple-touch-icon" href="apple-touch-icon.png">
+        <!-- Place favicon.ico in the root directory -->
+
+        <link rel="stylesheet" href="css/normalize.css">
+        <link rel="stylesheet" href="css/main.css">
+
+    </head>
+    <body>
+        <!--[if lt IE 8]>
+            <p class="browserupgrade">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
+        <![endif]-->
+
+
+        <script src="js/plugins.js"></script>
+        <script src="js/d3.js"></script>
+        <script src="js/main.js"></script>
+    <script type="text/javascript">
+        var derp;
+        var maxS = -1, minS = 100;
+        var maxL = -1, minL = 500;
+        d3.csv("data.csv", function(data){
+            derp = data;
+
+
+
+
+            for(val of data){
+                if(val.schoenmaat > maxS){
+                    maxS = val.schoenmaat;
+                }
+            }
+
+            for(val of data){
+                if(val.schoenmaat < minS && val.schoenmaat != ""){
+
+                    minS = val.schoenmaat;
+                }
+            }
+
+            for(val of data){
+                if(val.lengte > maxL){
+                    maxL = val.lengte;
+                }
+            }
+
+            for(val of data){
+                if(val.lengte < minL && val.lengte != ""){
+
+                    minL = val.lengte;
+                }
+            }
+
+
+            var canvas = d3.select("body").append("svg").attr("width", 2000).attr("height", 2000);
+
+            var colorScale = d3.scale.linear().domain([minS,maxS]).range(["yellow", "blue"]);
+            var widthScale = d3.scale.linear().domain([0,maxS]).range([0,500]);
+
+
+            var group1 = canvas.append("g").attr("transform","translate(10,0)");
+            var axisGroup = group1.append("g");
+
+
+            var bars = group1.selectAll("rect").data(data).enter()
+                .append("rect")
+                .attr("height", function(d){return 10;})
+                .attr("width", function(d){return widthScale(d.schoenmaat);})
+                .attr("fill", function(d){return colorScale(d.schoenmaat);})
+                .attr("y", function (d, i ){return i * 11;})
+                .attr("x", 0);
+
+            var axis = d3.svg.axis().scale(widthScale).ticks(6);
+            axisGroup.attr("transform", "translate(0,265)").call(axis);
+
+            var lengthScale = d3.scale.linear().domain([4,maxL]).range([0,500]);
+
+            var group2 = canvas.append("g").attr("transform","translate(600,0)");
+            var axisGroup2 = group2.append("g");
+            var bars = group2.selectAll("rect").data(data).enter()
+                .append("rect")
+                .attr("height", function(d){return 10;})
+                .attr("width", function(d){return lengthScale(d.lengte);})
+                .attr("fill", function(d){return colorScale(d.lengte);})
+                .attr("y", function (d, i ){return i * 11;})
+                .attr("x", 0);
+
+            var axisLengte = d3.svg.axis().scale(lengthScale).ticks(6);
+            axisGroup2.attr("transform", "translate(0,265)").call(axis);
+
+          /*  var axis = d3.svg.axis().scale(widthScale).ticks(5); //number of ticks
+            axisGroup.attr("transform", "translate(0,100)").call(axis);
+
+            var group2 = canvas.append("g").attr("transform", "translate(0,100)");
+
+            var circle = group2.selectAll("circle").data(data).enter().append("circle")
+                .attr("cx", function(d){return d*10;})
+                .attr("cy", function(d){return d*10;})
+                .attr("r", 10);*/
+
+        });
+
+    </script>
+
+
+    </body>
+</html>
